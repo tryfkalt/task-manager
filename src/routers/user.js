@@ -19,7 +19,7 @@ router.post('/users', async (req, res) => {
     } catch (e) {
         res.status(400).send(e)
     }
-	// user.save().then(() => {
+    // user.save().then(() => {
     //     res.status(201).send(user)
     // }).catch((e) => {
     //     res.status(400).send(e)
@@ -32,7 +32,7 @@ router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         //we use user. and not User cause we are working on one user and not the whole model atributes (we create a token to a user)
-       
+
         const token = await user.generateAuthToken()
         res.send({ user, token })
     } catch (e) {
@@ -42,7 +42,7 @@ router.post('/users/login', async (req, res) => {
 
 router.post('/users/logout', auth, async (req, res) => {
     try { //we are auth so we dont have to fetch the data again we already have access
-        
+
         req.user.tokens = req.user.tokens.filter((token) => {
             return token.token !== req.token
         })
@@ -66,15 +66,15 @@ router.post('/users/logoutAll', auth, async (req, res) => {
 
 router.get('/users/me', auth, async (req, res) => {
     res.send(req.user)
-    
+
     // try {
     //     const users = await User.find({})
     //     res.send(users)
     // } catch (e){
     //     res.status(500).send()
     // }
-    
-    
+
+
     // User.find({}).then((users) => {
     //     res.send(users)
     // }).catch((e) => {
@@ -104,14 +104,17 @@ router.get('/users/me', auth, async (req, res) => {
 // })
 
 router.patch('/users/me', auth, async (req, res) => {
-// the 1st arg is the filter the 2nd the updates we want to make and the 3rd is options obj
-// the new option returns the new user and not the existing one
-// the runvalidators option allows us to run validations before update
-    
+    // the 1st arg is the filter the 2nd the updates we want to make and the 3rd is options obj
+    // the new option returns the new user and not the existing one
+    // the runvalidators option allows us to run validations before update
+
     // object.keys converts an obj to an arr of its properties
-    const updates = Object.keys(req.body)
+    console.log(req.body)
+    console.log('=====')
+    const updates = Object.keys(req.body) // keys to string
+    console.log(updates)
     const allowedUpdates = ['name', 'email', 'password', 'age']
-    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update)) // every makes sure that every update must be included in the allowed updates 
 
     if (!isValidOperation) {
         return res.status(400).send({ error: 'Invalid updates!' })
@@ -123,9 +126,9 @@ router.patch('/users/me', auth, async (req, res) => {
         updates.forEach((update) => req.user[update] = req.body[update])
         //the middleware executes here
         await req.user.save()
-        
-         // const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators:true})
-        
+
+        // const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators:true})
+
         // if(!user){
         //     return res.status(404).send()
         // }
@@ -137,7 +140,7 @@ router.patch('/users/me', auth, async (req, res) => {
 
 router.delete('/users/me', auth, async (req, res) => {
     try {
-    // const user = await User.findByIdAndDelete(req.user._id)
+        // const user = await User.findByIdAndDelete(req.user._id)
 
         // if(!user){
         //     return res.status(404).send()
@@ -145,7 +148,7 @@ router.delete('/users/me', auth, async (req, res) => {
         await req.user.remove()
         sendByeEmail(req.user.email, req.user.name)
         res.send(req.user)
-    }  catch(e){
+    } catch (e) {
         //console.log(e)
         res.status(500).send()
     }
@@ -157,9 +160,9 @@ const upload = multer({
     limits: {
         fileSize: 10000000
     },
-    fileFilter(req, file, cb){
-        if(!file.originalname.match(/\.(jpg|png)$/)){
-            return cb(new Error ('Wrong Type'))
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|png)$/)) {
+            return cb(new Error('Wrong Type'))
         }
 
         cb(undefined, true)
@@ -174,20 +177,20 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
 
     //by removing the dest property in mutler the data is forwarded in the func here
     //req.user.avatar = req.file.buffer //change the data to the avatar property of user
-   
+
     req.user.avatar = buffer
     await req.user.save()   // save changes
     res.send()
 }, (error, req, res, next) => {
-    res.status(400).send({error: error.message}) // this 5th arg runs when error 
+    res.status(400).send({ error: error.message }) // this 5th arg runs when error 
 })
 
-router.delete('/users/me/avatar', auth, async(req, res)=> {
+router.delete('/users/me/avatar', auth, async (req, res) => {
     req.user.avatar = undefined
     await req.user.save()
     res.send()
 }), (error, req, res, next) => {
-    res.status(400).send({error: error.message}) // this 5th arg runs when error 
+    res.status(400).send({ error: error.message }) // this 5th arg runs when error 
 }
 
 
@@ -195,13 +198,13 @@ router.get('/users/:id/avatar', async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
 
-        if(!user || !user.avatar) {
+        if (!user || !user.avatar) {
             throw new Error()
         }
-// res header tell the requester what data they are getting back
+        // res header tell the requester what data they are getting back
         res.set('Content-Type', 'image/png') // key value pairs / name of header and value
         res.send(user.avatar)
-    } catch(e){
+    } catch (e) {
         res.status(404).send()
     }
 })
